@@ -1,0 +1,21 @@
+# Secrets and local data must never be baked into the image
+.env
+.env.*
+!.env.example
+data/
+*.db
+*.xlsx
+
+# Local tooling
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.git/
+.claude/
+
+# WhatsApp bridge
+wa_bridge/node_modules/
+wa_auth/
+wa_bridge/wa_auth/

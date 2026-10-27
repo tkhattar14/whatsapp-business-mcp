@@ -31,7 +31,7 @@ class WebhookHandler(BaseWhatsAppHandler):
         # Check for app secret (used for webhook signature verification)
         self.app_secret = os.getenv("META_APP_SECRET")
         if not self.app_secret:
-            print("⚠️ META_APP_SECRET not set - webhook signature verification disabled")
+            logger.warning("META_APP_SECRET not set - webhook signature verification disabled")
 
     def verify_webhook_signature(self, payload: bytes, signature: str) -> bool:
         """

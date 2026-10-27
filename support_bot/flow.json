@@ -1,0 +1,97 @@
+{
+  "greeting": "Hello {name}! 👋 Welcome to the *Max Migold Facility Management* support channel.\n\n(To check an existing request, just send your ticket ID, e.g. MMF-00012.)",
+  "invalid_choice": "Sorry, please choose one of the options below.",
+  "empty_answer": "Please type your answer so we can help you.",
+  "list_button": "Choose service area",
+  "restart_keywords": ["menu", "restart", "start over"],
+
+  "ticket_prefix": "MMF",
+  "ticket_status": "Pending",
+  "ticket_statuses": ["Pending", "In Progress", "Resolved"],
+
+  "start": "location",
+  "steps": {
+    "location": {
+      "type": "choice",
+      "field": "Location",
+      "question": "Which location are you contacting us from?",
+      "options": [
+        {"id": "la_tour", "title": "La Tour", "next": "flat_number"},
+        {"id": "lagoon", "title": "Lagoon", "next": "request_type"},
+        {"id": "seplat_eket", "title": "Seplat Eket", "keywords": ["seplat", "eket"], "next": "request_type"}
+      ]
+    },
+    "flat_number": {
+      "type": "text",
+      "field": "Flat Number",
+      "question": "What is your flat number? (1 - 45)",
+      "min": 1,
+      "max": 45,
+      "invalid_answer": "Please enter a valid flat number between 1 and 45.",
+      "next": "request_type"
+    },
+    "request_type": {
+      "type": "choice",
+      "field": "Request Type",
+      "question": "Would you like to lodge a complaint or give feedback on our service?",
+      "options": [
+        {"id": "complaint", "title": "Lodge a complaint", "value": "Complaint", "keywords": ["complaint", "complain"], "next": "complaint_area"},
+        {"id": "feedback", "title": "Give feedback", "value": "Feedback", "keywords": ["feedback"], "next": "feedback_area"}
+      ]
+    },
+    "complaint_area": {
+      "type": "choice",
+      "field": "Service Area",
+      "question": "Which service area is your complaint about?",
+      "options": [
+        {"id": "plumbing", "title": "Plumbing"},
+        {"id": "cleaning", "title": "Cleaning"},
+        {"id": "security", "title": "Security"},
+        {"id": "hvac", "title": "HVAC", "keywords": ["ac", "a/c", "air conditioner", "air conditioning"]},
+        {"id": "civil_work", "title": "Civil Work"},
+        {"id": "waste_management", "title": "Waste Management", "keywords": ["waste", "refuse"]},
+        {"id": "landscaping", "title": "Landscaping"},
+        {"id": "electrical", "title": "Electrical", "keywords": ["electricity", "power", "light"]},
+        {"id": "others", "title": "Others", "keywords": ["other"]}
+      ],
+      "next": "complaint"
+    },
+    "feedback_area": {
+      "type": "choice",
+      "field": "Service Area",
+      "question": "Which service area is your feedback about?",
+      "options": [
+        {"id": "plumbing", "title": "Plumbing"},
+        {"id": "cleaning", "title": "Cleaning"},
+        {"id": "security", "title": "Security"},
+        {"id": "hvac", "title": "HVAC", "keywords": ["ac", "a/c", "air conditioner", "air conditioning"]},
+        {"id": "civil_work", "title": "Civil Work"},
+        {"id": "waste_management", "title": "Waste Management", "keywords": ["waste", "refuse"]},
+        {"id": "landscaping", "title": "Landscaping"},
+        {"id": "electrical", "title": "Electrical", "keywords": ["electricity", "power", "light"]},
+        {"id": "others", "title": "Others", "keywords": ["other"]}
+      ],
+      "next": "feedback"
+    },
+    "complaint": {
+      "type": "text",
+      "field": "Complaint",
+      "question": "Please describe your complaint in full. You can also send a photo.",
+      "next": "done",
+      "done": "Thank you, {name}. ✅ Your complaint has been logged and will be responded to as soon as possible.\n\nYour ticket ID is *{ticket}*.\n\nTo check its status at any time, just send your ticket ID in this chat."
+    },
+    "feedback": {
+      "type": "text",
+      "field": "Feedback",
+      "question": "Please share your feedback about our service.",
+      "next": "done",
+      "ticket_status": "",
+      "done": "Thank you, {name}! 🙏 Your feedback has been received (reference *{ticket}*). We appreciate you helping us improve our service."
+    }
+  },
+
+  "done": "Thank you, {name}. ✅ Your request has been logged. Your ticket ID is *{ticket}*.",
+  "status_reply": "Ticket *{ticket}*\nStatus: *{status}*\n\n{summary}",
+  "status_reply_no_status": "Thank you — your feedback *{ticket}* was received. 🙏\n\n{summary}",
+  "status_not_found": "Sorry, we couldn't find ticket *{ticket}* for this phone number. Please check the ticket ID and try again."
+}

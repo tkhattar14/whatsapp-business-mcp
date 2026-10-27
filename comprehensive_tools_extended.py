@@ -474,7 +474,7 @@ def register_comprehensive_tools_extended(mcp, messaging_handler, template_handl
     async def request_verification_code(phone_number_id: str) -> dict:
         """Request verification code for a phone number."""
         try:
-            return await business_handler.request_verification_code(phone_number_id)
+            return await business_handler.request_verification_code(phone_number_id=phone_number_id)
         except Exception as e:
             return {"status": "error", "message": str(e)}
 
@@ -482,7 +482,7 @@ def register_comprehensive_tools_extended(mcp, messaging_handler, template_handl
     async def verify_code(phone_number_id: str, code: str) -> dict:
         """Verify code for a phone number."""
         try:
-            return await business_handler.verify_code(phone_number_id, code)
+            return await business_handler.verify_phone_number(code, phone_number_id=phone_number_id)
         except Exception as e:
             return {"status": "error", "message": str(e)}
 
@@ -490,7 +490,7 @@ def register_comprehensive_tools_extended(mcp, messaging_handler, template_handl
     async def set_two_step_verification_code(phone_number_id: str, code: str) -> dict:
         """Set two-step verification code for a phone number."""
         try:
-            return await business_handler.set_two_step_verification_code(phone_number_id, code)
+            return await business_handler.set_two_step_verification(code, phone_number_id=phone_number_id)
         except Exception as e:
             return {"status": "error", "message": str(e)}
 

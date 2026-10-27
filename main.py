@@ -3,7 +3,17 @@ from typing import List, Dict, Any, Optional
 import os
 from dotenv import load_dotenv
 import asyncio
+import sys
 import time
+
+
+# Status messages contain emoji; don't crash on Windows consoles that aren't UTF-8.
+sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+
+def log(*args):
+    """Write status output to stderr - stdout is reserved for the MCP stdio protocol."""
+    print(*args, file=sys.stderr)
 
 # Import all handlers
 from mcp_server import (
@@ -31,15 +41,15 @@ required_vars = ["META_ACCESS_TOKEN", "META_PHONE_NUMBER_ID"]
 missing_vars = [var for var in required_vars if not os.getenv(var)]
 
 if missing_vars:
-    print("❌ ERROR: Missing required environment variables:")
+    log("❌ ERROR: Missing required environment variables:")
     for var in missing_vars:
-        print(f"   - {var}")
-    print("\n📝 Please create a .env file with the required variables.")
-    print("   You can copy env_template.txt to .env and fill in your values.")
-    print("   Get your credentials from: https://developers.facebook.com/")
-    print("\n🔧 For testing, you can also set these as environment variables:")
+        log(f"   - {var}")
+    log("\n📝 Please create a .env file with the required variables.")
+    log("   You can copy .env.example to .env and fill in your values.")
+    log("   Get your credentials from: https://developers.facebook.com/")
+    log("\n🔧 For testing, you can also set these as environment variables:")
     for var in missing_vars:
-        print(f"   export {var}=your_value_here")
+        log(f"   export {var}=your_value_here")
     
     # Exit gracefully instead of continuing with None handlers
     import sys
@@ -54,38 +64,38 @@ try:
     # Initialize new handlers (optional - they may not have all required env vars)
     try:
         flow_handler = FlowHandler()
-        print("✅ Flow handler initialized")
+        log("✅ Flow handler initialized")
     except Exception as e:
-        print(f"⚠️  Flow handler not initialized: {e}")
+        log(f"⚠️  Flow handler not initialized: {e}")
         flow_handler = None
     
     try:
         analytics_handler = AnalyticsHandler()
-        print("✅ Analytics handler initialized")
+        log("✅ Analytics handler initialized")
     except Exception as e:
-        print(f"⚠️  Analytics handler not initialized: {e}")
+        log(f"⚠️  Analytics handler not initialized: {e}")
         analytics_handler = None
     
     try:
         webhook_handler = WebhookHandler()
-        print("✅ Webhook handler initialized")
+        log("✅ Webhook handler initialized")
     except Exception as e:
-        print(f"⚠️  Webhook handler not initialized: {e}")
+        log(f"⚠️  Webhook handler not initialized: {e}")
         webhook_handler = None
     
     try:
         business_account_handler = BusinessAccountHandler()
-        print("✅ Business Account handler initialized")
+        log("✅ Business Account handler initialized")
     except Exception as e:
-        print(f"⚠️  Business Account handler not initialized: {e}")
+        log(f"⚠️  Business Account handler not initialized: {e}")
         business_account_handler = None
     
     # Legacy handler for backward compatibility
     legacy_handler = WhatsAppHandler()
-    print("✅ All core handlers initialized successfully")
+    log("✅ All core handlers initialized successfully")
 except Exception as e:
-    print(f"❌ ERROR: Failed to initialize core handlers: {e}")
-    print("Please check your environment variables and try again.")
+    log(f"❌ ERROR: Failed to initialize core handlers: {e}")
+    log("Please check your environment variables and try again.")
     import sys
     sys.exit(1)
 
@@ -138,9 +148,9 @@ async def send_whatsapp_message(phone_number: str, message: str) -> dict:
 try:
     from comprehensive_tools import register_comprehensive_tools
     register_comprehensive_tools(mcp, messaging_handler, template_handler, business_handler, media_handler)
-    print("✅ Core comprehensive tools registered successfully")
+    log("✅ Core comprehensive tools registered successfully")
 except Exception as e:
-    print(f"❌ ERROR: Could not register core comprehensive tools: {e}")
+    log(f"❌ ERROR: Could not register core comprehensive tools: {e}")
     import sys
     sys.exit(1)
 
@@ -151,10 +161,10 @@ try:
         mcp, messaging_handler, template_handler, business_handler, media_handler,
         flow_handler, analytics_handler, webhook_handler, business_account_handler
     )
-    print("✅ Extended comprehensive tools registered successfully")
+    log("✅ Extended comprehensive tools registered successfully")
 except Exception as e:
-    print(f"⚠️  Could not register extended comprehensive tools: {e}")
-    print("Some advanced features may not be available")
+    log(f"⚠️  Could not register extended comprehensive tools: {e}")
+    log("Some advanced features may not be available")
 
 # ================================
 # RESOURCES
@@ -278,28 +288,28 @@ async def get_waba_accounts_resource() -> dict:
 # This file is optimized for stdio transport (MCP clients like Claude Desktop)
 
 if __name__ == "__main__":
-    print("🚀 Starting WhatsApp Cloud API Comprehensive MCP Server...")
-    print("📱 Supported features:")
-    print("   • Text, media, interactive, location, contact messaging")
-    print("   • Template message management and sending")
-    print("   • Business profile management")
-    print("   • Phone number operations")
-    print("   • Media upload and management")
-    print("   • Message reactions and replies")
-    print("   • WhatsApp Flows (interactive experiences)")
-    print("   • Analytics and metrics")
-    print("   • Webhook management")
-    print("   • Business account management")
-    print("   • Advanced phone number operations")
-    print("\n🔧 Required environment variables:")
-    print("   • META_ACCESS_TOKEN (required)")
-    print("   • META_PHONE_NUMBER_ID (required)")
-    print("   • WABA_ID (required for flows, analytics, webhooks)")
-    print("   • META_BUSINESS_ACCOUNT_ID (required for templates)")
-    print("   • META_BUSINESS_PORTFOLIO_ID (optional, for business account management)")
-    print("   • META_APP_ID (optional, for webhook management)")
-    print("\n▶️  Starting server...")
+    log("🚀 Starting WhatsApp Cloud API Comprehensive MCP Server...")
+    log("📱 Supported features:")
+    log("   • Text, media, interactive, location, contact messaging")
+    log("   • Template message management and sending")
+    log("   • Business profile management")
+    log("   • Phone number operations")
+    log("   • Media upload and management")
+    log("   • Message reactions and replies")
+    log("   • WhatsApp Flows (interactive experiences)")
+    log("   • Analytics and metrics")
+    log("   • Webhook management")
+    log("   • Business account management")
+    log("   • Advanced phone number operations")
+    log("\n🔧 Required environment variables:")
+    log("   • META_ACCESS_TOKEN (required)")
+    log("   • META_PHONE_NUMBER_ID (required)")
+    log("   • WABA_ID (required for flows, analytics, webhooks)")
+    log("   • META_BUSINESS_ACCOUNT_ID (required for templates)")
+    log("   • META_BUSINESS_PORTFOLIO_ID (optional, for business account management)")
+    log("   • META_APP_ID (optional, for webhook management)")
+    log("\n▶️  Starting server...")
     
     # Start in stdio mode for MCP clients (Claude Desktop, etc.)
-    print("🔌 Starting in stdio mode for MCP clients")
+    log("🔌 Starting in stdio mode for MCP clients")
     mcp.run(transport='stdio')

@@ -1,0 +1,14 @@
+# Replace the domain with the one you point at this VM (DNS A record -> VM public IP).
+# Caddy gets and renews the HTTPS certificate automatically.
+support.example.com {
+	# Only the WhatsApp webhook and the health check are public
+	@public path /webhook /health
+	handle @public {
+		reverse_proxy 127.0.0.1:8080
+	}
+
+	# Conversation/ticket endpoints and API docs stay private (use an SSH tunnel to reach them)
+	handle {
+		respond "Not found" 404
+	}
+}

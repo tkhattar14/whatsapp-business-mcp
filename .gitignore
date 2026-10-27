@@ -67,3 +67,13 @@ tokens.txt
 *secret*
 *token*
 *credential*
+# Local virtualenv and support bot database
+.venv/
+data/
+
+# Generated Excel log (upload to SharePoint, not git)
+*.xlsx
+
+# WhatsApp bridge: dependencies and the linked-device session (a login credential)
+wa_bridge/node_modules/
+wa_auth/

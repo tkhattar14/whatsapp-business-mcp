@@ -102,24 +102,24 @@ class BusinessHandler(BaseWhatsAppHandler):
         payload = {"messaging_product": "whatsapp"}
         return await self._make_request("POST", url, payload)
     
-    async def request_verification_code(self, code_method: str = "SMS", language: str = "en_US") -> Dict[str, Any]:
+    async def request_verification_code(self, code_method: str = "SMS", language: str = "en_US", phone_number_id: Optional[str] = None) -> Dict[str, Any]:
         """Request verification code for phone number"""
-        url = f"{self.base_url}/{self.phone_number_id}/request_code"
+        url = f"{self.base_url}/{phone_number_id or self.phone_number_id}/request_code"
         payload = {
             "code_method": code_method,
             "language": language
         }
         return await self._make_request("POST", url, payload)
     
-    async def verify_phone_number(self, code: str) -> Dict[str, Any]:
+    async def verify_phone_number(self, code: str, phone_number_id: Optional[str] = None) -> Dict[str, Any]:
         """Verify phone number with received code"""
-        url = f"{self.base_url}/{self.phone_number_id}/verify_code"
+        url = f"{self.base_url}/{phone_number_id or self.phone_number_id}/verify_code"
         payload = {"code": code}
         return await self._make_request("POST", url, payload)
     
-    async def set_two_step_verification(self, pin: str) -> Dict[str, Any]:
+    async def set_two_step_verification(self, pin: str, phone_number_id: Optional[str] = None) -> Dict[str, Any]:
         """Set two-step verification PIN"""
-        url = f"{self.base_url}/{self.phone_number_id}"
+        url = f"{self.base_url}/{phone_number_id or self.phone_number_id}"
         payload = {"pin": pin}
         return await self._make_request("POST", url, payload)
     

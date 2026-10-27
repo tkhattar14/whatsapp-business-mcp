@@ -1,0 +1,24 @@
+[Unit]
+Description=Max Migold WhatsApp support bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=whatsapp
+WorkingDirectory=/opt/whatsapp-business-mcp
+Environment=HOST=127.0.0.1
+Environment=PORT=8080
+ExecStart=/opt/whatsapp-business-mcp/.venv/bin/python main_http.py
+Restart=always
+RestartSec=5
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/whatsapp-business-mcp/data
+
+[Install]
+WantedBy=multi-user.target

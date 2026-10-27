@@ -1,0 +1,20 @@
+{
+  "name": "wa-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Links a WhatsApp number (like WhatsApp Web) and relays group messages to the Python group agent",
+  "type": "module",
+  "main": "index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "7.0.0-rc14",
+    "pg": "^8.23.1",
+    "pino": "^9.6.0",
+    "qrcode": "^1.5.4"
+  }
+}

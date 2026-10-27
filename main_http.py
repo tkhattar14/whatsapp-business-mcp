@@ -1,7 +1,10 @@
 import os
+import sys
 import asyncio
+import hmac
 import json
 import logging
+import re
 import time
 from collections import defaultdict
 from typing import Dict, Any, Optional
@@ -10,6 +13,13 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 import uvicorn
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Startup messages contain emoji; don't crash on Windows consoles that aren't UTF-8.
+for _stream in (sys.stdout, sys.stderr):
+    _stream.reconfigure(encoding="utf-8", errors="replace")
 
 # Import our MCP server components with graceful error handling
 try:
@@ -47,9 +57,28 @@ except ImportError as e:
     print(f"⚠️ Warning: Could not import extended comprehensive tools: {e}")
     register_comprehensive_tools_extended = None
 
+from support_bot import SupportService, SupportSettings, router as support_router
+from group_agent import GroupAgentService, GroupAgentSettings, router as group_agent_router
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("whatsapp-mcp-http")
+
+
+class RedactVerifyTokenFilter(logging.Filter):
+    """Keep the webhook verify token (sent by Meta as a query parameter) out of the access log."""
+
+    _pattern = re.compile(r"(hub[._]verify_token=)[^&\s]*")
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if isinstance(record.args, tuple):
+            record.args = tuple(
+                self._pattern.sub(r"\1[REDACTED]", arg) if isinstance(arg, str) else arg for arg in record.args
+            )
+        return True
+
+
+logging.getLogger("uvicorn.access").addFilter(RedactVerifyTokenFilter())
 
 
 # ================================
@@ -105,7 +134,7 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
         # If MCP_API_KEY is not set, skip auth (dev mode)
         if api_key and request.url.path.startswith("/api/"):
             provided_key = request.headers.get("X-API-Key", "")
-            if provided_key != api_key:
+            if not hmac.compare_digest(provided_key.encode(), api_key.encode()):
                 return JSONResponse(
                     status_code=401,
                     content={"status": "error", "message": "Invalid or missing API key"},
@@ -119,7 +148,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Only rate-limit API endpoints
         if request.url.path.startswith("/api/"):
-            client_ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or request.client.host
+            client_ip = (
+                request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+                or (request.client.host if request.client else "unknown")
+            )
             if not rate_limiter.allow(client_ip):
                 return JSONResponse(
                     status_code=429,
@@ -156,6 +188,11 @@ if allowed_origins:
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(APIKeyAuthMiddleware)
+
+# WhatsApp webhook (/webhook) and support conversation endpoints (/api/v1/support/*)
+app.include_router(support_router)
+# WhatsApp group agent (/group-agent/events from wa_bridge, /api/v1/group-agent/*)
+app.include_router(group_agent_router)
 
 # Global handlers
 messaging_handler = None
@@ -255,10 +292,40 @@ async def startup_event():
                 logger.warning(f"Business Account handler not initialized: {e}")
                 business_account_handler = None
 
+        # Customer support bot (menu + agent handoff + Excel logging)
+        if messaging_handler:
+            try:
+                app.state.support = SupportService(SupportSettings.from_env(), messaging_handler)
+                await app.state.support.start()
+                logger.info("Support bot initialized - webhook at /webhook")
+            except Exception as e:
+                logger.error(f"Support bot not initialized: {e}")
+                app.state.support = None
+
+        # WhatsApp group agent (dedicated number in residents' groups, via wa_bridge)
+        app.state.group_agent = None
+        group_settings = GroupAgentSettings.from_env()
+        if group_settings.enabled:
+            try:
+                app.state.group_agent = GroupAgentService(group_settings)
+                await app.state.group_agent.start()
+            except Exception as e:
+                logger.error(f"Group agent not initialized: {e}")
+                app.state.group_agent = None
+
         logger.info("All available handlers initialized successfully")
     except Exception as e:
         logger.error(f"Error initializing handlers: {e}")
         logger.info("Starting in demo mode")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    support = getattr(app.state, "support", None)
+    if support:
+        await support.stop()
+    group_agent = getattr(app.state, "group_agent", None)
+    if group_agent:
+        await group_agent.stop()
 
 @app.get("/")
 async def root():
@@ -309,7 +376,9 @@ async def health_check():
             "flows": flow_handler is not None,
             "analytics": analytics_handler is not None,
             "webhooks": webhook_handler is not None,
-            "business_account": business_account_handler is not None
+            "business_account": business_account_handler is not None,
+            "support_bot": getattr(app.state, "support", None) is not None,
+            "support_storage": app.state.support.store.backend if getattr(app.state, "support", None) else None,
         },
         "features": {
             "total_tools": "50+ WhatsApp Cloud API tools",
@@ -543,4 +612,5 @@ async def get_waba_accounts():
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8080))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    # Behind a reverse proxy on the same machine, set HOST=127.0.0.1 so the app isn't reachable directly
+    uvicorn.run(app, host=os.getenv("HOST", "0.0.0.0"), port=port)
